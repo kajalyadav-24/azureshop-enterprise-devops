@@ -1,6 +1,7 @@
 package com.azureshop.api.service;
 
 import com.azureshop.api.model.Product;
+import com.azureshop.api.exception.ProductNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -36,5 +37,15 @@ public class ProductService {
                         10
                 )
         );
+    }
+
+    public Product getProductById(Long id) {
+
+        return getAllProducts()
+                .stream()
+                .filter(product -> product.getId().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new ProductNotFoundException(id));
+
     }
 }
