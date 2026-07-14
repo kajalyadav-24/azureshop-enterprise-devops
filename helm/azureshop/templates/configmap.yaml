@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: azureshop-config
+data:
+  APP_NAME: "AzureShop"
+  APP_ENV: "Production"
+  LOG_LEVEL: "INFO"
