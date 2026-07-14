@@ -1,0 +1,53 @@
+stages:
+  - stage: Deploy
+    displayName: Deploy to AKS
+    dependsOn: Docker
+    condition: succeeded()
+
+    jobs:
+      - deployment: HelmDeploy
+        displayName: Deploy AzureShop with Helm
+        environment: azureshop-dev
+
+        pool:
+          vmImage: ubuntu-latest
+
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  displayName: Checkout GitHub repository
+
+                - task: AzureCLI@2
+                  displayName: Helm upgrade on AKS
+                  inputs:
+                    azureSubscription: 'sc-azureshop-dev'
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      set -e
+
+                      az aks get-credentials \
+                        --resource-group rg-azureshop-dev \
+                        --name aks-azureshop-dev \
+                        --admin \
+                        --overwrite-existing
+
+                      helm lint helm/azureshop
+
+                      helm upgrade --install azureshop helm/azureshop \
+                        --namespace azureshop \
+                        --create-namespace \
+                        --set image.repository=acrazureshopkajal24.azurecr.io/azureshop-api \
+                        --set image.tag="$(Build.BuildId)" \
+                        --atomic \
+                        --wait \
+                        --timeout 10m
+
+                      kubectl rollout status deployment/azureshop \
+                        --namespace azureshop \
+                        --timeout=5m
+
+                      kubectl get pods,service \
+                        --namespace azureshop
