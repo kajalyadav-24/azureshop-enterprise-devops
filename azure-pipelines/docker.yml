@@ -1,0 +1,36 @@
+stages:
+  - stage: Docker
+    displayName: Build and Push Docker Image
+    dependsOn: Build
+    condition: succeeded()
+
+    jobs:
+      - job: DockerBuildPush
+        displayName: Docker Build and ACR Push
+
+        pool:
+          vmImage: ubuntu-latest
+
+        steps:
+          - checkout: self
+            displayName: Checkout GitHub repository
+
+          - task: AzureCLI@2
+            displayName: Build and push image to ACR
+            inputs:
+              azureSubscription: 'sc-azureshop-dev'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                set -e
+                ACR_NAME="acrazureshopkajal24"
+                ACR_LOGIN_SERVER="acrazureshopkajal24.azurecr.io"
+                IMAGE_NAME="azureshop-api"
+                IMAGE_TAG="$(Build.BuildId)"
+
+                az acr login --name "$ACR_NAME"
+                docker build --file application/Dockerfile --tag "$ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG" --tag "$ACR_LOGIN_SERVER/$IMAGE_NAME:latest" application
+                docker push "$ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG"
+                docker push "$ACR_LOGIN_SERVER/$IMAGE_NAME:latest"
+
+                echo "Published image: $ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG"
