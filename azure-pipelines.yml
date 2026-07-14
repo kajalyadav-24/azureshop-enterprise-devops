@@ -11,3 +11,4 @@ pr:
 stages:
   - template: azure-pipelines/build.yml
   - template: azure-pipelines/docker.yml
+  - template: azure-pipelines/deploy.yml
