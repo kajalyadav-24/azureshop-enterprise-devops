@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: azureshop-api
+  namespace: azureshop
+  labels:
+    app: azureshop-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: azureshop-api
+  template:
+    metadata:
+      labels:
+        app: azureshop-api
+    spec:
+      containers:
+        - name: azureshop-api
+          image: acrazureshopkajal24.azurecr.io/azureshop-api:v1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 40
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3
