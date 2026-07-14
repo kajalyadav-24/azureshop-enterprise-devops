@@ -1,0 +1,44 @@
+stages:
+  - stage: SmokeTest
+    displayName: Post-Deployment Smoke Test
+    dependsOn: Deploy
+    condition: succeeded()
+
+    jobs:
+      - job: ValidateApplication
+        displayName: Validate AzureShop Endpoints
+
+        pool:
+          vmImage: ubuntu-latest
+
+        steps:
+          - task: Bash@3
+            displayName: Test application health and products API
+            inputs:
+              targetType: inline
+              script: |
+                set -e
+
+                SERVICE_URL="http://20.219.200.137"
+
+                echo "Waiting for application endpoints..."
+
+                for attempt in {1..12}; do
+                  if curl --silent --fail "$SERVICE_URL/actuator/health" > health.json; then
+                    echo "Application is reachable."
+                    break
+                  fi
+
+                  echo "Attempt $attempt failed. Retrying in 10 seconds..."
+                  sleep 10
+                done
+
+                echo "Validating health endpoint..."
+                curl --silent --fail "$SERVICE_URL/actuator/health" | tee health.json
+                grep -q '"status":"UP"' health.json
+
+                echo "Validating products endpoint..."
+                curl --silent --fail "$SERVICE_URL/api/products" | tee products.json
+                grep -q '"Dell Inspiron 15"' products.json
+
+                echo "Smoke tests completed successfully."
