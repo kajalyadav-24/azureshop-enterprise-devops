@@ -21,7 +21,7 @@ stages:
               jdkArchitectureOption: x64
               jdkSourceOption: PreInstalled
 
-          - task: SonarCloudPrepare@3
+          - task: SonarCloudPrepare@4
             displayName: Prepare SonarQube Cloud analysis
             inputs:
               SonarCloud: 'sc-sonarcloud-cloud'
@@ -47,7 +47,7 @@ stages:
               sonarQubeRunAnalysis: true
               sqMavenPluginVersionChoice: 'latest'
 
-          - task: SonarCloudPublish@3
+          - task: SonarCloudPublish@4
             displayName: Publish SonarQube Cloud quality gate
             inputs:
               pollingTimeoutSec: '300'
