@@ -8,39 +8,5 @@ pr:
     include:
       - main
 
-pool:
-  vmImage: ubuntu-latest
-
 stages:
-  - stage: Build
-    displayName: Build and Test
-    jobs:
-      - job: MavenBuild
-        displayName: Maven Build
-        steps:
-          - checkout: self
-            displayName: Checkout GitHub repository
-
-          - task: JavaToolInstaller@0
-            displayName: Use Java 17
-            inputs:
-              versionSpec: '17'
-              jdkArchitectureOption: x64
-              jdkSourceOption: PreInstalled
-
-          - task: Maven@4
-            displayName: Maven clean package
-            inputs:
-              mavenPOMFile: 'application/pom.xml'
-              goals: 'clean package'
-              publishJUnitResults: true
-              testResultsFiles: '**/surefire-reports/TEST-*.xml'
-              javaHomeOption: Path
-              jdkDirectory: '$(JAVA_HOME_17_X64)'
-
-          - task: PublishPipelineArtifact@1
-            displayName: Publish application JAR
-            inputs:
-              targetPath: 'application/target'
-              artifact: 'azureshop-jar'
-              publishLocation: pipeline
+  - template: azure-pipelines/build.yml
