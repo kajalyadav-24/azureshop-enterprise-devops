@@ -1,10 +1,10 @@
 stages:
   - stage: Build
-    displayName: Build and Test
+    displayName: Build, Test and SonarCloud Analysis
 
     jobs:
       - job: MavenBuild
-        displayName: Maven Build
+        displayName: Maven Build and SonarCloud Scan
 
         pool:
           vmImage: ubuntu-latest
@@ -12,6 +12,7 @@ stages:
         steps:
           - checkout: self
             displayName: Checkout GitHub repository
+            fetchDepth: 0
 
           - task: JavaToolInstaller@0
             displayName: Use Java 17
@@ -20,8 +21,22 @@ stages:
               jdkArchitectureOption: x64
               jdkSourceOption: PreInstalled
 
+          - task: SonarCloudPrepare@3
+            displayName: Prepare SonarQube Cloud analysis
+            inputs:
+              SonarCloud: 'sc-sonarcloud-cloud'
+              organization: 'kajalyadav-24'
+              scannerMode: 'other'
+              extraProperties: |
+                sonar.projectKey=kajalyadav-24_azureshop-enterprise-devops
+                sonar.projectName=azureshop-enterprise-devops
+                sonar.projectBaseDir=application
+                sonar.sources=src/main
+                sonar.tests=src/test
+                sonar.java.binaries=target/classes
+
           - task: Maven@4
-            displayName: Maven clean package
+            displayName: Maven clean package and SonarCloud analysis
             inputs:
               mavenPOMFile: 'application/pom.xml'
               goals: 'clean package'
@@ -29,6 +44,13 @@ stages:
               testResultsFiles: '**/surefire-reports/TEST-*.xml'
               javaHomeOption: Path
               jdkDirectory: '$(JAVA_HOME_17_X64)'
+              sonarQubeRunAnalysis: true
+              sqMavenPluginVersionChoice: 'latest'
+
+          - task: SonarCloudPublish@3
+            displayName: Publish SonarQube Cloud quality gate
+            inputs:
+              pollingTimeoutSec: '300'
 
           - task: PublishPipelineArtifact@1
             displayName: Publish application JAR
